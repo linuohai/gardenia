@@ -4,7 +4,7 @@ ICC_HOME=/opt/intel/compilers_and_libraries/linux/bin/intel64
 GEM5_HOME=/home/cxh/gem5
 MKLROOT=/opt/intel/mkl
 CUB_DIR=../../cub
-OCL_DIR=/usr/local/cuda-11.5/targets/x86_64-linux/lib/
+OCL_DIR=$(CUDA_HOME)/targets/x86_64-linux/lib/
 BIN=../../bin
 HOST=X86
 ifeq ($(HOST),X86)
@@ -18,11 +18,12 @@ ICC=$(ICC_HOME)/icc
 ICPC=$(ICC_HOME)/icpc
 NVCC=nvcc
 #NVCC=$(CUDA_HOME)/bin/nvcc
-COMPUTECAPABILITY=sm_60
+COMPUTECAPABILITY=sm_80
 CUDA_ARCH := \
-	-gencode arch=compute_37,code=sm_37 \
-	-gencode arch=compute_61,code=sm_61 \
-	-gencode arch=compute_70,code=sm_70
+# 	-gencode arch=compute_37,code=sm_37 \
+# 	-gencode arch=compute_61,code=sm_61 \
+# 	-gencode arch=compute_70,code=sm_70 \
+	-gencode arch=compute_80,code=sm_80
 CXXFLAGS=-Wall -fopenmp -std=c++11
 ICPCFLAGS=-O3 -Wall -qopenmp
 NVFLAGS=$(CUDA_ARCH)
@@ -38,17 +39,17 @@ endif
 M5OP=$(GEM5_HOME)/util/m5/src/x86/m5op.S
 ifeq ($(DEBUG), 1)
 	CXXFLAGS += -g -O0
-	NVFLAGS += -G -lineinfo
+	NVFLAGS += -G -g -lineinfo
 else
 	CXXFLAGS += -g -O3
-	NVFLAGS += -O3 -w
+	NVFLAGS += -O3 -w -lineinfo
 endif
 CU_INC = -I/usr/include/cuda
 CU_INC = -I$(CUDA_HOME)/include
 INCLUDES = -I../../include
 #INCLUDES += $(CU_INC)
-#LIBS = -L$(CUDA_HOME)/lib64
-LIBS = -L/usr/lib64
+LIBS = -L$(CUDA_HOME)/lib64
+LIBS += -L/usr/lib64
 
 ifeq ($(PAPI), 1)
 CXXFLAGS += -DENABLE_PAPI

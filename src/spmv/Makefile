@@ -3,6 +3,51 @@ SRC=main.cc
 OBJS=vector.o omp_base.o verifier.o main.o
 INCLUDES += -I${MKLROOT}/include -I$(CUB_DIR)
 LIBS += -L${MKLROOT}/lib/intel64
+
+### Optional: cubin & SASS dump helpers
+#
+# Usage examples:
+#   make cubin-base
+#   make sass-base
+#   make sass-all
+#
+# Control verbosity / source-line mapping:
+#   make SASS_VERBOSE=1 sass-base
+#   make DEBUG=1 sass-base          # device debug (-G -g) comes from common.mk
+
+NVCC_CUBIN_FLAGS ?= $(NVFLAGS)
+
+NVCC_SASS_FLAGS ?=
+ifeq ($(SASS_VERBOSE),1)
+NVCC_SASS_FLAGS += --print-instruction-info --print-guard --print-code --print-line-info
+else
+NVCC_SASS_FLAGS += --print-line-info
+endif
+
+CU_SRCS := $(wildcard *.cu)
+CUBINS  := $(CU_SRCS:.cu=.cubin)
+SASS    := $(CU_SRCS:.cu=.sass)
+
+### Generate cubin for a single CU file (compile-only)
+%.cubin: %.cu
+	$(NVCC) $(NVCC_CUBIN_FLAGS) $(INCLUDES) --cubin $< -o $@
+
+### Disassemble cubin into SASS text
+%.sass: %.cubin
+	nvdisasm $(NVCC_SASS_FLAGS) $< > $@
+
+# Convenience targets
+cubin-all: $(CUBINS)
+sass-all: $(SASS)
+
+cubin-base: base.cubin
+sass-base: base.sass
+cubin-warp: warp.cubin
+sass-warp: warp.sass
+cubin-vector: vector.cubin
+sass-vector: vector.sass
+cubin-push: push.cubin
+sass-push: push.sass
 all: $(OBJS) spmv_vector spmv_omp_base spmv_warp spmv_base
 
 %.o: %.cpp
@@ -88,4 +133,4 @@ spmv_omp_target: main.o omp_target.o verifier.o
 	mv $@ $(BIN)
 
 clean:
-	rm *.o
+	rm -f *.o *.cubin *.sass

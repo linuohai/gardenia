@@ -1,4 +1,6 @@
 #pragma once
+#include <cstdio>
+#include <cstdlib>
 #include <cusparse_v2.h>
 
 #  define CUDA_SAFE_CALL_NO_SYNC( call) {                                      \
@@ -27,6 +29,12 @@
 #endif
 
 static unsigned CudaTest(const char *msg) {
+  cudaError_t err = cudaGetLastError();
+  if (cudaSuccess != err) {
+    fprintf(stderr, "error %d: %s : %s.\n", err, msg, cudaGetErrorString(err));
+    exit(EXIT_FAILURE);
+  }
+  return 0;
 }
 
 // you must first call the cudaGetDeviceProperties() function, then pass
@@ -104,4 +112,3 @@ static size_t get_gpu_mem_size(int device = 0) {
   CUDA_SAFE_CALL(cudaGetDeviceProperties(&prop, device));
   return prop.totalGlobalMem;
 }
-

@@ -16,3 +16,11 @@ vecAdd/vecAdd
 color/color.txt
 
 test/out/*.out
+kron_g500-logn21.mtx
+soc-orkut.mtx
+soc-LiveJournal1.mtx
+cit-Patents.mtx
+cit-Patents_nodename.mtx
+flickr.mtx
+road_usa.mtx
+web-Google.mtxdatasets/real_workload/

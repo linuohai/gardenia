@@ -4,6 +4,31 @@ ICPCFLAGS+=-std=c++98
 B40_DIR=../../back40computing-read-only
 B40C_INC=-I $(B40_DIR) -I $(B40_DIR)/test
 OBJS= main.o verifier.o 
+
+### Optional: cubin & SASS dump helpers
+#
+# Usage examples:
+#   make cubin-linear-base
+#   make sass-linear-base
+#   make sass-all
+#
+# Control verbosity / source-line mapping:
+#   make SASS_VERBOSE=1 sass-linear-base
+#   make DEBUG=1 sass-linear-base          # device debug (-G -g) comes from common.mk
+
+NVCC_CUBIN_FLAGS ?= $(NVFLAGS)
+
+NVCC_SASS_FLAGS ?=
+ifeq ($(SASS_VERBOSE),1)
+NVCC_SASS_FLAGS += --print-instruction-info --print-guard --print-code --print-line-info
+else
+NVCC_SASS_FLAGS += --print-line-info
+endif
+
+CU_SRCS := $(wildcard *.cu)
+CUBINS  := $(CU_SRCS:.cu=.cubin)
+SASS    := $(CU_SRCS:.cu=.sass)
+
 all: bfs_linear_base bfs_linear_lb bfs_omp_beamer bfs_omp_base
 
 %.o: %.cpp
@@ -19,6 +44,21 @@ endif
 
 %.o: %.cu
 	$(NVCC) $(NVFLAGS) $(INCLUDES) -c $<
+
+### Generate cubin for a single CU file (compile-only)
+%.cubin: %.cu
+	$(NVCC) $(NVCC_CUBIN_FLAGS) $(INCLUDES) --cubin $< -o $@
+
+### Disassemble cubin into SASS text
+%.sass: %.cubin
+	nvdisasm $(NVCC_SASS_FLAGS) $< > $@
+
+# Convenience targets
+cubin-all: $(CUBINS)
+sass-all: $(SASS)
+
+cubin-linear-base: linear_base.cubin
+sass-linear-base: linear_base.sass
 
 bfs_ocl_base: ocl_base.o $(OBJS)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OBJS) ocl_base.o -o $@ -lOpenCL
@@ -106,4 +146,4 @@ bfs_merrill: merrill.cu main.o verifier.o
 	mv $@ $(BIN)
 
 clean:
-	rm *.o
+	rm -f *.o *.cubin *.sass
