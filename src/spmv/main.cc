@@ -1,4 +1,3 @@
-// Copyright 2020 MIT
 // Authors: Xuhao Chen <cxh@mit.edu>
 #include "spmv.h"
 

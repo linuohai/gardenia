@@ -9,7 +9,11 @@ int main(int argc, char *argv[]) {
     printf("Example: %s mtx web-Google 1 1\n", argv[0]);
     exit(1);
   }
-  Graph g(argv[2], argv[1], atoi(argv[3]), atoi(argv[4]));
+  bool symmetrize = false;
+  bool need_reverse = false;
+  if (argc > 3) symmetrize = atoi(argv[3]);
+  if (argc > 4) need_reverse = atoi(argv[4]);
+  Graph g(argv[2], argv[1], symmetrize, need_reverse);
   auto m = g.V();
   std::vector<CompT> comp(m);
   for (int i = 0; i < m; i++) comp[i] = i;

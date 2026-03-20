@@ -24,3 +24,22 @@ cit-Patents_nodename.mtx
 flickr.mtx
 road_usa.mtx
 web-Google.mtx
+roadNet-CA.mtx
+
+# Ignore large dataset files
+*.bin
+*.mtx
+*.edge.bin
+*.vertex.bin
+
+# Ignore compiled artifacts and GPU assembly/binaries
+*.cubin
+*.ptx
+*.sass
+*.from_elf.*
+*.from_ptx.*
+
+# Ignore compiled tools binaries
+tools/mtx2bin_graph
+tools/mtx_degree_stats
+tools/mtx_source_locality

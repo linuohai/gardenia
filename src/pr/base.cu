@@ -4,6 +4,9 @@
 #include "timer.h"
 #include "cutil_subset.h"
 #include "cuda_launch_config.hpp"
+#ifdef WARPS_PER_BLOCK
+#undef WARPS_PER_BLOCK
+#endif
 #include <cub/cub.cuh>
 
 #define FUSED 0

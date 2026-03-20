@@ -4,6 +4,9 @@
 #include "bitset.h"
 #include "cutil_subset.h"
 #include <set>
+#ifdef WARPS_PER_BLOCK
+#undef WARPS_PER_BLOCK
+#endif
 #include <cub/cub.cuh>
 #include <thrust/reduce.h>
 #include <thrust/execution_policy.h>
@@ -504,4 +507,3 @@ void print_statistics(int m, int *scc_root, unsigned char *status) {
 	printf("\tnum_trimmed=%d, num_pivots=%d, total_num_scc=%d\n", total_num_trimmed, total_num_pivots, total_num_trimmed+total_num_pivots);
 	printf("\tnum_trivial=%d, num_nontrivial=%d, total_num_scc=%d, biggest_scc_size=%d\n", num_trivial_scc, num_nontrivial_scc, total_num_scc, biggest_scc_size);
 }
-

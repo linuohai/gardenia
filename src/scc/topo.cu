@@ -7,6 +7,7 @@
 #include "cutil_subset.h"
 #include <thrust/reduce.h>
 #include <thrust/execution_policy.h>
+#include <thrust/sequence.h>
 #include "timer.h"
 #define debug 0
 
@@ -80,4 +81,3 @@ void SCCSolver(int m, int nnz, int *in_row_offsets, int *in_column_indices, int 
 	CUDA_SAFE_CALL(cudaFree(d_status));
 	free(h_status);
 }
-

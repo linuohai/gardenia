@@ -19,7 +19,7 @@ NVCC_CUBIN_FLAGS ?= $(NVFLAGS)
 
 NVCC_SASS_FLAGS ?=
 ifeq ($(SASS_VERBOSE),1)
-NVCC_SASS_FLAGS += --print-instruction-info --print-guard --print-code --print-line-info
+NVCC_SASS_FLAGS += --print-code --print-line-info
 else
 NVCC_SASS_FLAGS += --print-line-info
 endif

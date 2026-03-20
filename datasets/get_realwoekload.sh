@@ -26,8 +26,9 @@ rm -f  *.zip *.gz
 # Link datasets to accel-sim workload directories
 mkdir -p ./accelsim/bfs_linear_base/data
 mkdir -p ./accelsim/spmv/data
-CURRENT_DIR=$(pwd)
-find "$CURRENT_DIR/real_workload" -name "*.mtx" -exec ln -sf {} "$CURRENT_DIR/accelsim/bfs_linear_base/data/" \;
-find "$CURRENT_DIR/real_workload" -name "*.mtx" -exec ln -sf {} "$CURRENT_DIR/accelsim/spmv/data/" \;
+find real_workload -name "*.mtx" -type f | while read -r file; do
+    ln -sf "../../../$file" "./accelsim/bfs_linear_base/data/"
+    ln -sf "../../../$file" "./accelsim/spmv/data/"
+done
 
 cd -

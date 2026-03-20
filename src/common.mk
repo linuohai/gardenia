@@ -19,11 +19,7 @@ ICPC=$(ICC_HOME)/icpc
 NVCC=nvcc
 #NVCC=$(CUDA_HOME)/bin/nvcc
 COMPUTECAPABILITY=sm_80
-CUDA_ARCH := \
-# 	-gencode arch=compute_37,code=sm_37 \
-# 	-gencode arch=compute_61,code=sm_61 \
-# 	-gencode arch=compute_70,code=sm_70 \
-	-gencode arch=compute_80,code=sm_80
+CUDA_ARCH := -gencode arch=compute_80,code=sm_80
 CXXFLAGS=-Wall -fopenmp -std=c++11
 ICPCFLAGS=-O3 -Wall -qopenmp
 NVFLAGS=$(CUDA_ARCH)
@@ -47,7 +43,9 @@ endif
 CU_INC = -I/usr/include/cuda
 CU_INC = -I$(CUDA_HOME)/include
 INCLUDES = -I../../include
-#INCLUDES += $(CU_INC)
+INCLUDES += $(CU_INC)
+CXXFLAGS += -DTHRUST_IGNORE_CUB_VERSION_CHECK
+NVFLAGS += -DTHRUST_IGNORE_CUB_VERSION_CHECK
 LIBS = -L$(CUDA_HOME)/lib64
 LIBS += -L/usr/lib64
 
