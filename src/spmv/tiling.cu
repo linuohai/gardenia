@@ -73,7 +73,7 @@ __global__ void spmv_warp(int m, const IndexT * Ap, const IndexT * Aj, const Val
 	}
 }
 
-void SpmvSolver(int m, int nnz, IndexT *ApT, IndexT *AjT, ValueT *AxT, IndexT *h_Ap, IndexT *h_Aj, ValueT *h_Ax, ValueT *h_x, ValueT *h_y, int *degrees) { 
+static void SpmvSolver_impl(int m, int nnz, IndexT *ApT, IndexT *AjT, ValueT *AxT, IndexT *h_Ap, IndexT *h_Aj, ValueT *h_Ax, ValueT *h_x, ValueT *h_y, int *degrees) {
 	//print_device_info(0);
 	column_blocking(m, h_Ap, h_Aj, h_Ax);
 
@@ -129,5 +129,21 @@ void SpmvSolver(int m, int nnz, IndexT *ApT, IndexT *AjT, ValueT *AxT, IndexT *h
 	CUDA_SAFE_CALL(cudaMemcpy(h_y, d_y, sizeof(ValueT) * m, cudaMemcpyDeviceToHost));
 	CUDA_SAFE_CALL(cudaFree(d_x));
 	CUDA_SAFE_CALL(cudaFree(d_y));
+}
+
+#include <vector>
+void SpmvSolver(Graph &g, const ValueT *h_Ax, const ValueT *h_x, ValueT *h_y) {
+	int m = g.V();
+	int nnz = g.E();
+	auto *u_in = g.in_rowptr();
+	IndexT *h_Aj = g.in_colidx();
+	std::vector<IndexT> h_Ap(m+1);
+	for (int i = 0; i <= m; i++) h_Ap[i] = (IndexT)u_in[i];
+	std::vector<int> degs(m);
+	for (int v = 0; v < m; v++) degs[v] = h_Ap[v+1] - h_Ap[v];
+	// NOTE: ApT/AjT/AxT are dead params in tiling.cu (only h_Ap/h_Aj/h_Ax feed column_blocking)
+	SpmvSolver_impl(m, nnz, nullptr, nullptr, nullptr,
+	                h_Ap.data(), h_Aj, (ValueT*)h_Ax,
+	                (ValueT*)h_x, h_y, degs.data());
 }
 

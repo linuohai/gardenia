@@ -424,7 +424,7 @@ __global__ void reverse_lb(int num, const IndexT *row_offsets, const IndexT *col
 	}
 }
 
-void BCSolver(int m, int nnz, int source, IndexT *in_row_offsets, IndexT *in_column_indices, IndexT *out_row_offsets, IndexT *out_column_indices, int *h_degrees, ScoreT *h_scores) {
+static void BCSolver_impl(int m, int nnz, int source, IndexT *in_row_offsets, IndexT *in_column_indices, IndexT *out_row_offsets, IndexT *out_column_indices, int *h_degrees, ScoreT *h_scores) {
 	//print_device_info(0);
 	int *d_in_row_offsets, *d_in_column_indices;
 	CUDA_SAFE_CALL(cudaMalloc((void **)&d_in_row_offsets, (m + 1) * sizeof(int)));
@@ -562,5 +562,25 @@ void BCSolver(int m, int nnz, int source, IndexT *in_row_offsets, IndexT *in_col
 	CUDA_SAFE_CALL(cudaFree(d_frontiers));
 	CUDA_SAFE_CALL(cudaFree(d_out_row_offsets));
 	CUDA_SAFE_CALL(cudaFree(d_out_column_indices));
+}
+
+void BCSolver(Graph &g, int source, ScoreT *h_scores) {
+	int m = g.V();
+	int nnz = g.E();
+	auto *u_out = g.out_rowptr();
+	IndexT *c_out = g.out_colidx();
+	std::vector<IndexT> rp(m+1), irp(m+1);
+	for (int i = 0; i <= m; i++) rp[i] = (IndexT)u_out[i];
+	IndexT *c_in = c_out;
+	if (g.has_reverse_graph() && g.in_rowptr()) {
+		auto *u_in = g.in_rowptr();
+		for (int i = 0; i <= m; i++) irp[i] = (IndexT)u_in[i];
+		c_in = g.in_colidx();
+	} else {
+		irp = rp;
+	}
+	std::vector<int> degs(m);
+	for (int v = 0; v < m; v++) degs[v] = rp[v+1] - rp[v];
+	BCSolver_impl(m, nnz, source, irp.data(), c_in, rp.data(), c_out, degs.data(), h_scores);
 }
 

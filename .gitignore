@@ -43,3 +43,4 @@ roadNet-CA.mtx
 tools/mtx2bin_graph
 tools/mtx_degree_stats
 tools/mtx_source_locality
+.bashrc

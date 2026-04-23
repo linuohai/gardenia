@@ -156,7 +156,7 @@ __global__ void shortcut(int m, CompT *comp) {
 	}
 }
 
-void CCSolver(int m, int nnz, IndexT *in_row_offsets, IndexT *in_column_indices, IndexT *h_row_offsets, IndexT *h_column_indices, int *degrees, CompT *h_comp, bool is_directed) {
+static void CCSolver_impl(int m, int nnz, IndexT *in_row_offsets, IndexT *in_column_indices, IndexT *h_row_offsets, IndexT *h_column_indices, int *degrees, CompT *h_comp, bool is_directed) {
 	//print_device_info(0);
 	segmenting(m, h_row_offsets, h_column_indices, NULL);
 
@@ -236,5 +236,25 @@ void CCSolver(int m, int nnz, IndexT *in_row_offsets, IndexT *in_column_indices,
 	//CUDA_SAFE_CALL(cudaFree(d_column_indices));
 	CUDA_SAFE_CALL(cudaFree(d_comp));
 	CUDA_SAFE_CALL(cudaFree(d_changed));
+}
+
+void CCSolver(Graph &g, CompT *h_comp) {
+	int m = g.V();
+	int nnz = g.E();
+	auto *u_out = g.out_rowptr();
+	IndexT *c_out = g.out_colidx();
+	std::vector<IndexT> rp(m+1), irp(m+1);
+	for (int i = 0; i <= m; i++) rp[i] = (IndexT)u_out[i];
+	IndexT *c_in = c_out;
+	if (g.has_reverse_graph() && g.in_rowptr()) {
+		auto *u_in = g.in_rowptr();
+		for (int i = 0; i <= m; i++) irp[i] = (IndexT)u_in[i];
+		c_in = g.in_colidx();
+	} else {
+		irp = rp;
+	}
+	std::vector<int> degs(m);
+	for (int v = 0; v < m; v++) degs[v] = rp[v+1] - rp[v];
+	CCSolver_impl(m, nnz, irp.data(), c_in, rp.data(), c_out, degs.data(), h_comp, g.is_directed());
 }
 

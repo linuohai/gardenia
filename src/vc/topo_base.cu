@@ -48,7 +48,7 @@ __global__ void conflict_resolve(int m, int *row_offsets, int *column_indices, i
 	}
 }
 
-int VCSolver(int m, int nnz, int *row_offsets, int *column_indices, int *colors) {
+static int VCSolver_impl(int m, int nnz, int *row_offsets, int *column_indices, int *colors) {
 	//print_device_info(0);
 	int *d_row_offsets, *d_column_indices, *d_colors;
 	CUDA_SAFE_CALL(cudaMalloc((void **)&d_row_offsets, (m + 1) * sizeof(int)));
@@ -94,4 +94,15 @@ int VCSolver(int m, int nnz, int *row_offsets, int *column_indices, int *colors)
 	CUDA_SAFE_CALL(cudaFree(d_column_indices));
 	CUDA_SAFE_CALL(cudaFree(d_colors));
 	return num_colors;
+}
+
+#include <vector>
+int VCSolver(Graph &g, int *colors) {
+	int m = g.V();
+	int nnz = g.E();
+	auto *u_out = g.out_rowptr();
+	int *c_out = g.out_colidx();
+	std::vector<int> rp(m+1);
+	for (int i = 0; i <= m; i++) rp[i] = (int)u_out[i];
+	return VCSolver_impl(m, nnz, rp.data(), c_out, colors);
 }

@@ -65,7 +65,7 @@ __global__ void update(int m, DistT *dist, bool *visited) {
  * @param[in] h_weight          Host pointer of DistT to the edge weight queue
  * @param[out]h_dist            Host pointer of DistT to the distance queue
  */
-void SSSPSolver(int m, int nnz, int source, int *h_row_offsets, int *h_column_indices, DistT *h_weight, DistT *h_dist, int delta) {
+static void SSSPSolver_impl(int m, int nnz, int source, int *h_row_offsets, int *h_column_indices, DistT *h_weight, DistT *h_dist, int delta) {
 	//print_device_info(0);
 	DistT zero = 0;
 	bool one = 1;
@@ -125,4 +125,15 @@ void SSSPSolver(int m, int nnz, int source, int *h_row_offsets, int *h_column_in
 	CUDA_SAFE_CALL(cudaFree(d_changed));
 	CUDA_SAFE_CALL(cudaFree(d_num_frontier));
 	return;
+}
+
+#include <vector>
+void SSSPSolver(Graph &g, int source, DistT *h_weight, DistT *h_dist, int delta) {
+	int m = g.V();
+	int nnz = g.E();
+	auto *u_out = g.out_rowptr();
+	int *c_out = g.out_colidx();
+	std::vector<int> rp(m+1);
+	for (int i = 0; i <= m; i++) rp[i] = (int)u_out[i];
+	SSSPSolver_impl(m, nnz, source, rp.data(), c_out, h_weight, h_dist, delta);
 }

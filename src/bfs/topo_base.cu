@@ -32,7 +32,7 @@ __global__ void update(int m, DistT *depths, bool *visited, int *front, bool *ch
 	}
 }
 
-void BFSSolver(int m, int nnz, int source, int *in_row_offsets, int *in_column_indices, int *h_row_offsets, int *h_column_indices, int *in_degree, int *h_degree, DistT *h_dist) {
+static void BFSSolver_impl(int m, int nnz, int source, int *in_row_offsets, int *in_column_indices, int *h_row_offsets, int *h_column_indices, int *in_degree, int *h_degree, DistT *h_dist) {
 	//print_device_info(0);
 	DistT zero = 0;
 	bool one = 1;
@@ -86,4 +86,29 @@ void BFSSolver(int m, int nnz, int source, int *in_row_offsets, int *in_column_i
 	CUDA_SAFE_CALL(cudaFree(d_front));
 	CUDA_SAFE_CALL(cudaFree(d_changed));
 	return;
+}
+
+#include <vector>
+void BFSSolver(Graph &g, int source, DistT *h_dist) {
+	int m = g.V();
+	int nnz = g.E();
+	auto *u_out = g.out_rowptr();
+	int *c_out = g.out_colidx();
+	std::vector<int> rp(m+1), irp(m+1);
+	for (int i = 0; i <= m; i++) rp[i] = (int)u_out[i];
+	int *c_in = c_out;
+	if (g.has_reverse_graph() && g.in_rowptr()) {
+		auto *u_in = g.in_rowptr();
+		for (int i = 0; i <= m; i++) irp[i] = (int)u_in[i];
+		c_in = g.in_colidx();
+	} else {
+		irp = rp;
+	}
+	std::vector<int> in_deg(m), out_deg(m);
+	for (int v = 0; v < m; v++) {
+		out_deg[v] = rp[v+1] - rp[v];
+		in_deg[v] = irp[v+1] - irp[v];
+	}
+	BFSSolver_impl(m, nnz, source, irp.data(), c_in, rp.data(), c_out,
+	               in_deg.data(), out_deg.data(), h_dist);
 }
